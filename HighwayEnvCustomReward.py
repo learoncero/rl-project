@@ -12,13 +12,13 @@ class HighwayEnvFastCustomReward(HighwayEnvFast):
     def __init__(self, *args, log_rewards_enabled=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.log_rewards_enabled = log_rewards_enabled
-        self.csv_file_path = "rewards_log.csv"
+        self.csv_file_path = "custom_reward_log.csv"
         # Create the CSV file and write the headers if it doesn't exist
         if not os.path.exists(self.csv_file_path):
             with open(self.csv_file_path, mode='w', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow(["episode", "collision_reward", "right_lane_reward", 
-                                 "high_speed_reward", "on_road_reward", "safe_distance_reward"])
+                writer.writerow(["collision_reward", "right_lane_reward", 
+                                 "high_speed_reward", "on_road_reward", "safe_distance_reward", "left_vehicle_overtaken_reward"])
 
     def _reward(self, action: Action) -> float:
         rewards = self._rewards(action)
@@ -57,13 +57,12 @@ class HighwayEnvFastCustomReward(HighwayEnvFast):
         )
 
         safe_distance_reward = self.get_safe_distance_reward()
-        collision_reward = self.get_collision_reward()
         high_speed_reward = self.get_high_speed_reward(scaled_speed=scaled_speed)
         left_car_overtaken_reward = self.get_left_vehicle_overtaken_reward() 
 
 
         return {
-            "collision_reward": collision_reward,
+            "collision_reward": float(self.vehicle.crashed),
             "right_lane_reward": lane / max(len(neighbours) - 1, 1),
             "high_speed_reward": high_speed_reward,
             "on_road_reward": float(self.vehicle.on_road),
@@ -74,11 +73,12 @@ class HighwayEnvFastCustomReward(HighwayEnvFast):
     def log_rewards(self, rewards: dict):
         """Logs rewards to a CSV file."""
         episode_number = getattr(self, 'episode_number', 0)  # Assuming you have an episode counter
-        rewards_row = [episode_number] + [rewards[key] for key in ["collision_reward", 
+        rewards_row = [rewards[key] for key in ["collision_reward", 
                                                                     "right_lane_reward", 
                                                                     "high_speed_reward", 
                                                                     "on_road_reward", 
-                                                                    "safe_distance_reward"]]
+                                                                    "safe_distance_reward",
+                                                                    "left_vehicle_overtaken_reward"]]
         with open(self.csv_file_path, mode='a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(rewards_row)
@@ -101,23 +101,7 @@ class HighwayEnvFastCustomReward(HighwayEnvFast):
             safe_distance_reward = 0
         return safe_distance_reward
     
-    def get_collision_reward(self):
-        # Improved collision reward
-        collision_penalty = 1 if self.vehicle.crashed else 0  # Full penalty for collision
-        near_miss_penalty = 0
-        near_miss_threshold = 1
-        for vehicle in self.road.vehicles:
-            if vehicle is not self.vehicle:
-                distance_to_vehicle = np.linalg.norm(
-                    np.array(self.vehicle.position) - np.array(vehicle.position)
-                )
-                if 0 < distance_to_vehicle <= near_miss_threshold:
-                    near_miss_penalty += -0.5 * (near_miss_threshold - distance_to_vehicle) / near_miss_threshold
 
-        collision_reward = collision_penalty + near_miss_penalty
-
-        return collision_reward
-    
     def get_high_speed_reward(self, scaled_speed):
         # High speed reward
         traffic_radius = 10
