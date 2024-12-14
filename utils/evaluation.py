@@ -4,7 +4,7 @@ import gymnasium
 from stable_baselines3 import DQN
 import highway_env
 
-def evaluate_model(env, config_updates, model_path, total_episodes=200):
+def evaluate_model(env, model_path, total_episodes=200, config_updates=None):
     """
     Evaluate a trained model on a given environment.
 
