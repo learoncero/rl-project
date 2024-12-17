@@ -1,10 +1,10 @@
 import pprint
 import numpy as np
 import gymnasium
-from stable_baselines3 import DQN
+from stable_baselines3 import DQN, PPO, A2C, SAC
 import highway_env
 
-def evaluate_model(env, model_path, total_episodes=200, config_updates=None):
+def evaluate_model(env, model_path, algorithm='DQN', total_episodes=200, config_updates=None):
     """
     Evaluate a trained model on a given environment.
 
@@ -12,6 +12,7 @@ def evaluate_model(env, model_path, total_episodes=200, config_updates=None):
     - env: Gymnasium environment.
     - config_updates: Dictionary of environment configuration updates.
     - model_path (str): Path to the trained model.
+    - algorithm (str): RL algorithm used for training (e.g., 'DQN', 'PPO', 'A2C', 'SAC').
     - tensorboard_log_dir (str): Directory to save TensorBoard logs.
     - total_episodes (int): Number of episodes to evaluate.
     - log_interval (int): Interval for logging mean metrics.
@@ -25,7 +26,20 @@ def evaluate_model(env, model_path, total_episodes=200, config_updates=None):
 
     pprint.pprint(env.unwrapped.config)
 
-    model = DQN.load(model_path)
+    # Define available algorithms
+    algorithms = {
+        'DQN': DQN,
+        'PPO': PPO,
+        'A2C': A2C,
+        'SAC': SAC,
+    }
+
+    if algorithm not in algorithms:
+        raise ValueError(f"Unsupported algorithm: {algorithm}. Available algorithms are: {list(algorithms.keys())}")
+
+    # Load the model based on the specified algorithm
+    AlgorithmClass = algorithms[algorithm]
+    model = AlgorithmClass.load(model_path)
 
     for episode in range(total_episodes):
         done = truncated = False  # Reset the done and truncated flags to False
