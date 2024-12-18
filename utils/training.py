@@ -70,5 +70,5 @@ def train_model(
     model.learn(total_timesteps=total_timesteps, callback=checkpoint_callback)
 
     # Save the model
-    model.save(f"{model_save_path}{session_name}")
+    model.save(f"{model_save_path}{session_name}_{algorithm}")
     print(f"Model saved to {model_save_path}{session_name}")
