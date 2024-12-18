@@ -1,7 +1,8 @@
 import pprint
 import gymnasium
 import highway_env
-from stable_baselines3 import DQN, PPO, A2C, SAC
+from stable_baselines3 import DQN, PPO, A2C
+from sb3_contrib import ARS, QRDQN, RecurrentPPO, TRPO
 from stable_baselines3.common.callbacks import CheckpointCallback
 
 def train_model(
@@ -47,7 +48,10 @@ def train_model(
         'DQN': DQN,
         'PPO': PPO,
         'A2C': A2C,
-        'SAC': SAC,
+        'ARS': ARS,
+        'QRDQN': QRDQN,
+        'RecurrentPPO': RecurrentPPO,
+        'TRPO': TRPO
     }
 
     if algorithm not in algorithms:
@@ -70,5 +74,5 @@ def train_model(
     model.learn(total_timesteps=total_timesteps, callback=checkpoint_callback)
 
     # Save the model
-    model.save(f"{model_save_path}{session_name}")
+    model.save(f"{model_save_path}{session_name}_{algorithm}")
     print(f"Model saved to {model_save_path}{session_name}")
