@@ -49,4 +49,5 @@ def evaluate_model(env, model_path, algorithm='DQN', total_episodes=200, config_
             action, _states = model.predict(obs,
                                             deterministic=True)  # Get the action from the model, without exploration (deterministic)
             obs, reward, done, truncated, info = env.step(action)  # Perform the action in the environment
+
             env.render()  # Render the environment
