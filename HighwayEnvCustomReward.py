@@ -9,24 +9,16 @@ import os
 import csv
 
 class HighwayEnvFastCustomReward(HighwayEnvFast):
-    def __init__(self, *args, log_rewards_enabled=False,log_performance_metrics_enabled=True, **kwargs):
+    def __init__(self, *args, log_performance_metrics_enabled=True, log_filename="custom_reward_log.csv", **kwargs):
 
-
-        self.log_rewards_enabled=log_rewards_enabled
         self.log_performance_metrics_enabled=log_performance_metrics_enabled
 
         super().__init__(*args, **kwargs)
         
 
-        self.rewards_csv_file_path = "custom_reward_log.csv"
-        self.performance_metrics_csv_file_path = "custom_perfomance_metrics_log.csv"
-        # Create the CSV file and write the headers if it doesn't exist
-        if not os.path.exists(self.rewards_csv_file_path):
-            with open(self.rewards_csv_file_path, mode='w', newline='') as file:
-                writer = csv.writer(file)
-                writer.writerow(["collision_reward", "right_lane_reward", 
-                                 "high_speed_reward", "on_road_reward", "safe_distance_reward", "left_vehicle_overtaken_reward", "smooth_driving_reward"
-                                ])
+        self.performance_metrics_csv_file_path = log_filename
+
+        
         if not os.path.exists(self.performance_metrics_csv_file_path):
             with open(self.performance_metrics_csv_file_path, mode='w', newline='') as file:
                 writer = csv.writer(file)
@@ -40,15 +32,18 @@ class HighwayEnvFastCustomReward(HighwayEnvFast):
                                 ])
 
     def _reward(self, action: Action) -> float:
+        # print("Step number", self.steps)
+        # print("time elapsed", self.time)
+        # print("_reward is being called")
         rewards = self._rewards(action)
         reward = sum(
-            self.config.get(name, 0) * reward for name, reward in rewards.items()
+            self.config.get(name, 0) * reward 
+            for name, reward in rewards.items() 
         )
 
         # Log rewards to CSV if logging is enabled
-        if self.log_rewards_enabled:
-            self.log_rewards(rewards)
         if self.log_performance_metrics_enabled:
+            print("Logging metrics for step", self.steps, "and seconds elapsed", self.time)
             self.log_performance_metrics(rewards)
 
         if self.config["normalize_reward"]:
@@ -56,7 +51,8 @@ class HighwayEnvFastCustomReward(HighwayEnvFast):
                 reward,
                 [
                     self.config["collision_reward"] + self.config["left_vehicle_overtaken_reward"],
-                    self.config["high_speed_reward"] + self.config["right_lane_reward"] + self.config["safe_distance_reward"]+self.config['smooth_driving_reward'] 
+                    self.config["high_speed_reward"] + self.config["right_lane_reward"] + self.config["safe_distance_reward"]
+                    +self.config['smooth_driving_reward'] 
                 ],
                 [0, 1],
             )
@@ -132,7 +128,7 @@ class HighwayEnvFastCustomReward(HighwayEnvFast):
         if rewards.get("smooth_driving_reward", 0 ) == 0:
             abrupt_accelerations_count += 1
             
-        if rewards.get("on_road_reward", 0 ) == 0:
+        if rewards.get("on_road_reward", 0 ) > 0:
             on_road_count += 1
             
         performance_metrics_row = [
@@ -246,6 +242,7 @@ class HighwayEnvFastCustomReward(HighwayEnvFast):
         smooth_driving_reward = 1 
 
         if hasattr(self, "previous_speed") and (self.previous_speed is not None):
+
             current_forward_speed = self.vehicle.speed * np.cos(self.vehicle.heading)
             speed_change = abs(current_forward_speed - self.previous_speed)
             

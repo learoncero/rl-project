@@ -1,7 +1,8 @@
 import pprint
 import gymnasium
 import highway_env
-from stable_baselines3 import DQN, PPO, A2C, SAC
+from stable_baselines3 import DQN, PPO, A2C, SAC, HER
+from sb3_contrib import TRPO
 from stable_baselines3.common.callbacks import CheckpointCallback
 
 def train_model(
@@ -47,7 +48,7 @@ def train_model(
         'DQN': DQN,
         'PPO': PPO,
         'A2C': A2C,
-        'SAC': SAC,
+        'TRPO': TRPO,
     }
 
     if algorithm not in algorithms:

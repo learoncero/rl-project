@@ -11,9 +11,6 @@ import csv
 class HighwayEnvDefaultReward(HighwayEnvFast):
     def __init__(self, *args, log_rewards_enabled=False,log_performance_metrics_enabled=False, **kwargs):
 
-
-
-        
         self.log_rewards_enabled=log_rewards_enabled
         self.log_performance_metrics_enabled=log_performance_metrics_enabled
 
@@ -42,6 +39,9 @@ class HighwayEnvDefaultReward(HighwayEnvFast):
                                 ])
 
     def _reward(self, action: Action) -> float:
+        print("Step number", self.steps)
+        print("time elapsed", self.time)
+        print("_reward is being called")
         rewards = self._rewards(action)
 
         reward = 0
@@ -184,6 +184,7 @@ class HighwayEnvDefaultReward(HighwayEnvFast):
         smooth_driving_reward = 1 
 
         if hasattr(self, "previous_speed") and (self.previous_speed is not None):
+            print("vehicle speed", self.vehicle.speed)
             current_forward_speed = self.vehicle.speed * np.cos(self.vehicle.heading)
             speed_change = abs(current_forward_speed - self.previous_speed)
             

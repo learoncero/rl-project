@@ -9,26 +9,16 @@ import os
 import csv
 
 class HighwayEnvDefaultReward(HighwayEnvFast):
-    def __init__(self, *args, log_rewards_enabled=False,log_performance_metrics_enabled=False, **kwargs):
+    def __init__(self, *args,log_performance_metrics_enabled=False, log_filename="default_reward_log.csv", **kwargs):
 
-
-
-        
-        self.log_rewards_enabled=log_rewards_enabled
         self.log_performance_metrics_enabled=log_performance_metrics_enabled
 
         super().__init__(*args, **kwargs)
         
-        self.csv_file_path = "default_reward_log.csv"
-        self.performance_metrics_csv_file_path = "default_perfomance_metrics_log.csv"
+        self.performance_metrics_csv_file_path = log_filename
         
         
         # Create the CSV file and write the headers if it doesn't exist
-        with open(self.csv_file_path, mode='w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(["collision_reward", "right_lane_reward", 
-                                "high_speed_reward", "on_road_reward", "safe_distance_reward",
-                                "left_vehicle_overtaken_reward", "smooth_driving_reward"])
         if not os.path.exists(self.performance_metrics_csv_file_path):
             with open(self.performance_metrics_csv_file_path, mode='w', newline='') as file:
                 writer = csv.writer(file)
@@ -42,17 +32,22 @@ class HighwayEnvDefaultReward(HighwayEnvFast):
                                 ])
 
     def _reward(self, action: Action) -> float:
+        # print("Step number", self.steps)
+        # print("time elapsed", self.time)
+        # print("_reward is being called")
         rewards = self._rewards(action)
 
         reward = 0
+
+        # Limit rewards to only the 3 that the default environment takes into account
         for name in ['collision_reward', 'high_speed_reward', 'right_lane_reward']:
             reward += self.config.get(name, 0) * rewards[name]
             
 
-        # Log rewards to CSV if logging is enabled
-        if self.log_rewards_enabled:
-            self.log_rewards(rewards)
+        # Log metrics to CSV if logging is enabled
+
         if self.log_performance_metrics_enabled:
+            print("Logging metrics for step", self.steps, "and seconds elapsed", self.time)
             self.log_performance_metrics(rewards)
 
         if self.config["normalize_reward"]:
@@ -218,7 +213,7 @@ class HighwayEnvDefaultReward(HighwayEnvFast):
         if rewards.get("smooth_driving_reward", 0 ) == 0:
             abrupt_accelerations_count += 1
             
-        if rewards.get("on_road_reward", 0 ) == 0:
+        if rewards.get("on_road_reward", 0 ) > 0:
             on_road_count += 1
             
         performance_metrics_row = [
