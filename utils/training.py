@@ -1,8 +1,8 @@
 import pprint
 import gymnasium
 import highway_env
-from stable_baselines3 import DQN, PPO, A2C
-from sb3_contrib import ARS, QRDQN, RecurrentPPO, TRPO
+from stable_baselines3 import DQN, PPO, A2C, SAC, HER
+from sb3_contrib import TRPO
 from stable_baselines3.common.callbacks import CheckpointCallback
 
 def train_model(
@@ -48,10 +48,7 @@ def train_model(
         'DQN': DQN,
         'PPO': PPO,
         'A2C': A2C,
-        'ARS': ARS,
-        'QRDQN': QRDQN,
-        'RecurrentPPO': RecurrentPPO,
-        'TRPO': TRPO
+        'TRPO': TRPO,
     }
 
     if algorithm not in algorithms:
@@ -66,7 +63,7 @@ def train_model(
         policy,
         env,
         verbose=1,
-        tensorboard_log=f"{save_path}tensorboard/{session_name}_{algorithm}_Training",
+        tensorboard_log=f"{save_path}tensorboard/{session_name}_{algorithm}",
         **algorithm_kwargs
     )
 
@@ -74,5 +71,5 @@ def train_model(
     model.learn(total_timesteps=total_timesteps, callback=checkpoint_callback)
 
     # Save the model
-    model.save(f"{model_save_path}{session_name}_{algorithm}")
+    model.save(f"{model_save_path}{session_name}")
     print(f"Model saved to {model_save_path}{session_name}")
