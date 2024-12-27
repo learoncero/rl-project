@@ -18,7 +18,6 @@ def evaluate_model(env, model_path, algorithm='DQN', total_episodes=200, config_
     - algorithm (str): RL algorithm used for training (e.g., 'DQN', 'PPO', 'A2C', 'SAC').
     - tensorboard_log_dir (str): Directory to save TensorBoard logs.
     - total_episodes (int): Number of episodes to evaluate.
-    - log_interval (int): Interval for logging mean metrics.
 
     Returns:
     - dict: Aggregated evaluation metrics.

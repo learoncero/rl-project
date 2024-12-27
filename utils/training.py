@@ -4,6 +4,7 @@ import highway_env
 from stable_baselines3 import DQN, PPO, A2C, SAC, HER
 from sb3_contrib import TRPO
 from stable_baselines3.common.callbacks import CheckpointCallback
+import torch
 
 def train_model(
     env,
@@ -57,6 +58,8 @@ def train_model(
     # Select the algorithm class
     AlgorithmClass = algorithms[algorithm]
 
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
     # Initialize algorithm with environment and other parameters
     algorithm_kwargs = algorithm_kwargs or {}
     model = AlgorithmClass(
@@ -64,6 +67,7 @@ def train_model(
         env,
         verbose=1,
         tensorboard_log=f"{save_path}tensorboard/{session_name}_{algorithm}",
+        device=device,
         **algorithm_kwargs
     )
 
