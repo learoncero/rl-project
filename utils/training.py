@@ -1,7 +1,7 @@
 import pprint
 import gymnasium
 import highway_env
-from stable_baselines3 import DQN, PPO, A2C, SAC, HER
+from stable_baselines3 import DQN, PPO, A2C, SAC, HER, TD3
 from sb3_contrib import TRPO
 from stable_baselines3.common.callbacks import CheckpointCallback
 import torch
@@ -50,6 +50,9 @@ def train_model(
         'PPO': PPO,
         'A2C': A2C,
         'TRPO': TRPO,
+        "SAC" : SAC, 
+        "PPO": PPO, 
+        "TD3" : TD3
     }
 
     if algorithm not in algorithms:
@@ -62,6 +65,7 @@ def train_model(
 
     # Initialize algorithm with environment and other parameters
     algorithm_kwargs = algorithm_kwargs or {}
+    print("Training with policy", policy)
     model = AlgorithmClass(
         policy,
         env,

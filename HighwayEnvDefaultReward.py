@@ -40,10 +40,12 @@ class HighwayEnvDefaultReward(HighwayEnvFast):
         reward = 0
 
         # Limit rewards to only the 3 that the default environment takes into account
-        for name in ['collision_reward', 'high_speed_reward', 'right_lane_reward']:
-            reward += self.config.get(name, 0) * rewards[name]
+        reward = sum(
+            self.config.get(name, 0) * reward
+            for name, reward in rewards.items()
+            if name in {"collision_reward", "high_speed_reward", "right_lane_reward"}
+        )
             
-
         # Log metrics to CSV if logging is enabled
 
         if self.log_performance_metrics_enabled:

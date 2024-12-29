@@ -9,34 +9,51 @@ import os
 import csv
 
 class HighwayEnvFastCustomReward(HighwayEnvFast):
-    def __init__(self, *args, log_rewards_enabled=False, **kwargs):
+    def __init__(self, *args, log_performance_metrics_enabled=True, log_filename="custom_reward_log.csv", **kwargs):
+
+        self.log_performance_metrics_enabled=log_performance_metrics_enabled
+
         super().__init__(*args, **kwargs)
-        self.log_rewards_enabled = log_rewards_enabled
-        self.csv_file_path = "custom_reward_log.csv"
-        # Create the CSV file and write the headers if it doesn't exist
-        if not os.path.exists(self.csv_file_path):
-            with open(self.csv_file_path, mode='w', newline='') as file:
+        
+
+        self.performance_metrics_csv_file_path = log_filename
+
+        
+        if not os.path.exists(self.performance_metrics_csv_file_path):
+            with open(self.performance_metrics_csv_file_path, mode='w', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow(["collision_reward", "right_lane_reward", 
-                                 "high_speed_reward", "on_road_reward", "safe_distance_reward", "left_vehicle_overtaken_reward", "smooth_driving_reward"
+                writer.writerow([
+                                 "collision_count", 
+                                 "right_lane_count", 
+                                 "on_road_count", 
+                                 "safe_distance_count", 
+                                 "left_vehicle_overtaken_count", 
+                                 "abrupt_accelerations_count"
                                 ])
 
     def _reward(self, action: Action) -> float:
+        # print("Step number", self.steps)
+        # print("time elapsed", self.time)
+        # print("_reward is being called")
         rewards = self._rewards(action)
         reward = sum(
             self.config.get(name, 0) * reward for name, reward in rewards.items()
-        )
+        )         
 
         # Log rewards to CSV if logging is enabled
-        if self.log_rewards_enabled:
-            self.log_rewards(rewards)
+        if self.log_performance_metrics_enabled:
+            print("Logging metrics for step", self.steps, "and seconds elapsed", self.time)
+            self.log_performance_metrics(rewards)
 
         if self.config["normalize_reward"]:
             reward = utils.lmap(
                 reward,
                 [
-                    self.config["collision_reward"] + self.config["left_vehicle_overtaken_reward"],
-                    self.config["high_speed_reward"] + self.config["right_lane_reward"] + self.config["safe_distance_reward"]+self.config['smooth_driving_reward'] 
+                    self.config["collision_reward"] 
+                    + self.config["left_vehicle_overtaken_reward"]
+                    ,
+                    self.config["high_speed_reward"] + self.config["right_lane_reward"] + self.config["safe_distance_reward"]
+                    +self.config['smooth_driving_reward'] 
                 ],
                 [0, 1],
             )
@@ -75,7 +92,6 @@ class HighwayEnvFastCustomReward(HighwayEnvFast):
 
     def log_rewards(self, rewards: dict):
         """Logs rewards to a CSV file."""
-        episode_number = getattr(self, 'episode_number', 0)  # Assuming you have an episode counter
         rewards_row = [rewards[key] for key in ["collision_reward", 
                                                                     "right_lane_reward", 
                                                                     "high_speed_reward", 
@@ -84,9 +100,54 @@ class HighwayEnvFastCustomReward(HighwayEnvFast):
                                                                     "left_vehicle_overtaken_reward", 
                                                                     "smooth_driving_reward"
                                                                     ]]
-        with open(self.csv_file_path, mode='a', newline='') as file:
+        with open(self.rewards_csv_file_path, mode='a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(rewards_row)
+
+
+            
+            
+    def log_performance_metrics(self, rewards: dict):
+        collision_count=0
+        right_lane_count=0
+        on_road_count=0
+        safe_distance_count=0
+        left_vehicle_overtaken_count=0
+        abrupt_accelerations_count=0
+        if rewards.get('collision_reward', 0) > 0:
+            collision_count += 1
+            
+        if rewards.get("right_lane_reward", 0 ) > 0: 
+            right_lane_count += 1
+            
+        if rewards.get("safe_distance_reward", 0 ) >0:
+            safe_distance_count += 1
+            
+        if rewards.get("left_vehicle_overtaken_reward", 0 ) >0:
+            left_vehicle_overtaken_count += 1
+            
+        if rewards.get("smooth_driving_reward", 0 ) == 0:
+            abrupt_accelerations_count += 1
+            
+        if rewards.get("on_road_reward", 0 ) > 0:
+            on_road_count += 1
+            
+        performance_metrics_row = [
+                                collision_count, 
+                                right_lane_count, 
+                                on_road_count, 
+                                safe_distance_count, 
+                                left_vehicle_overtaken_count, 
+                                abrupt_accelerations_count
+            ]
+
+        with open(self.performance_metrics_csv_file_path, mode='a', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(performance_metrics_row)
+            
+
+                                 
+        
 
     def close(self):
         """Close the environment."""
@@ -182,6 +243,7 @@ class HighwayEnvFastCustomReward(HighwayEnvFast):
         smooth_driving_reward = 1 
 
         if hasattr(self, "previous_speed") and (self.previous_speed is not None):
+
             current_forward_speed = self.vehicle.speed * np.cos(self.vehicle.heading)
             speed_change = abs(current_forward_speed - self.previous_speed)
             

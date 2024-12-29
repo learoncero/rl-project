@@ -1,7 +1,7 @@
 import pprint
 import numpy as np
 import gymnasium
-from stable_baselines3 import DQN, PPO, A2C, SAC
+from stable_baselines3 import DQN, PPO, A2C, SAC, TD3
 import highway_env
 from collections import defaultdict
 from sb3_contrib import TRPO
@@ -34,6 +34,9 @@ def evaluate_model(env, model_path, algorithm='DQN', total_episodes=200, config_
         'PPO': PPO,
         'A2C': A2C,
         'TRPO': TRPO,
+        "SAC": SAC, 
+        "PPO" : PPO, 
+        "TD3": TD3
     }
 
     if algorithm not in algorithms:
@@ -41,6 +44,7 @@ def evaluate_model(env, model_path, algorithm='DQN', total_episodes=200, config_
 
     # Load the model based on the specified algorithm
     AlgorithmClass = algorithms[algorithm]
+    print("Loading model with path", model_path)
     model = AlgorithmClass.load(model_path)
 
     for episode in range(total_episodes):

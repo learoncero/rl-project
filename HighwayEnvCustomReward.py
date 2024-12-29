@@ -37,9 +37,8 @@ class HighwayEnvFastCustomReward(HighwayEnvFast):
         # print("_reward is being called")
         rewards = self._rewards(action)
         reward = sum(
-            self.config.get(name, 0) * reward 
-            for name, reward in rewards.items() 
-        )
+            self.config.get(name, 0) * reward for name, reward in rewards.items()
+        )         
 
         # Log rewards to CSV if logging is enabled
         if self.log_performance_metrics_enabled:
@@ -50,7 +49,9 @@ class HighwayEnvFastCustomReward(HighwayEnvFast):
             reward = utils.lmap(
                 reward,
                 [
-                    self.config["collision_reward"] + self.config["left_vehicle_overtaken_reward"],
+                    self.config["collision_reward"] 
+                    + self.config["left_vehicle_overtaken_reward"]
+                    ,
                     self.config["high_speed_reward"] + self.config["right_lane_reward"] + self.config["safe_distance_reward"]
                     +self.config['smooth_driving_reward'] 
                 ],
